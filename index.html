@@ -187,7 +187,7 @@
       const showRope = incorrectCount > 3;
       const showSupport = incorrectCount > 4;
       // Face (Eric image)
-      const ericImg = showHead ? `<image href='eric.png' x='44' y='19' width='72' height='72' clip-path='url(#ericClip)' class='hangman-face${showHead ? ' visible' : ''}' style='opacity:${showHead ? 1 : 0};transition:opacity 0.3s;' />` : '';
+      const ericImg = showHead ? `<image href='eric.png' x='53' y='28' width='54' height='54' clip-path='url(#ericClip)' class='hangman-face${showHead ? ' visible' : ''}' style='opacity:${showHead ? 1 : 0};transition:opacity 0.3s;' />` : '';
       const svg = `
         <svg width="120" height="180" viewBox="0 0 120 180">
           <defs>
@@ -201,8 +201,7 @@
           <line x1="30" y1="20" x2="80" y2="20" class="hangman-part${showBeam?' visible':''}" id="beam" />
           <line x1="80" y1="20" x2="80" y2="40" class="hangman-part${showRope?' visible':''}" id="rope" />
           <line x1="30" y1="50" x2="60" y2="20" class="hangman-part${showSupport?' visible':''}" id="support" />
-          <!-- Head outline -->
-          <circle cx="80" cy="55" r="15" class="hangman-part${showHead?' visible':''}" id="head" />
+          <!-- Head (Eric image only, no circle) -->
           ${ericImg}
           <!-- Body -->
           <line x1="80" y1="70" x2="80" y2="110" class="hangman-part${showBody?' visible':''}" id="body" />
