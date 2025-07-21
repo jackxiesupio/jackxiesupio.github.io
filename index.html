@@ -3,31 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Emi Martínez Save</title>
+  <title>Hangman Game - Emi Martínez Save</title>
   <style>
     body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
       margin: 0;
       background: #f5f5f5;
       font-family: Arial, sans-serif;
     }
     .image-container {
+      margin-top: 32px;
+      margin-bottom: 16px;
       text-align: center;
     }
-    img {
-      max-width: 90vw;
+    .image-container img {
+      max-width: 200px;
+      width: 100%;
       height: auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
     .caption {
-      margin-top: 1rem;
-      font-size: 1.2rem;
+      margin-top: 0.5rem;
+      font-size: 1rem;
       color: #333;
+    }
+    .hangman-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      padding: 32px 24px 24px 24px;
+      margin-top: 16px;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .word {
+      font-size: 2rem;
+      letter-spacing: 0.5rem;
+      margin-bottom: 24px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .letters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+    .letter-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      background: #f0f0f0;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .letter-btn:disabled {
+      background: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .incorrect-letters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+      min-height: 40px;
+    }
+    .incorrect-box {
+      background: #ffdddd;
+      color: #b00;
+      border: 1px solid #b00;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .guesses-left {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: #555;
+    }
+    .game-message {
+      font-size: 1.3rem;
+      margin-top: 12px;
+      color: #1976d2;
+      min-height: 32px;
+      text-align: center;
+    }
+    .restart-btn {
+      margin-top: 18px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .restart-btn:hover {
+      background: #125ea2;
     }
   </style>
 </head>
@@ -36,5 +120,130 @@
     <img src="Emi-Martinez-save.jpg" alt="Emi Martínez Save">
     <div class="caption">Emi Martínez's Legendary Save</div>
   </div>
+  <div class="hangman-container">
+    <div class="guesses-left" id="guessesLeft"></div>
+    <div class="word" id="wordDisplay"></div>
+    <div class="letters" id="letterButtons"></div>
+    <div class="incorrect-letters" id="incorrectLetters"></div>
+    <div class="game-message" id="gameMessage"></div>
+    <button class="restart-btn" id="restartBtn" style="display:none;">Restart</button>
+  </div>
+  <script type="module">
+    import { WORDS } from './words.js';
+
+    let chosenWord = '';
+    let correctGuesses = [];
+    let incorrectGuesses = [];
+    let guessesLeft = 12;
+    let gameOver = false;
+
+    const wordDisplay = document.getElementById('wordDisplay');
+    const letterButtons = document.getElementById('letterButtons');
+    const incorrectLetters = document.getElementById('incorrectLetters');
+    const guessesLeftDiv = document.getElementById('guessesLeft');
+    const gameMessage = document.getElementById('gameMessage');
+    const restartBtn = document.getElementById('restartBtn');
+
+    function pickWord() {
+      const idx = Math.floor(Math.random() * WORDS.length);
+      return WORDS[idx].toUpperCase();
+    }
+
+    function displayWord() {
+      let display = '';
+      for (let letter of chosenWord) {
+        if (correctGuesses.includes(letter)) {
+          display += letter + ' ';
+        } else {
+          display += '_ ';
+        }
+      }
+      wordDisplay.textContent = display.trim();
+    }
+
+    function createLetterButtons() {
+      letterButtons.innerHTML = '';
+      for (let i = 65; i <= 90; i++) {
+        const letter = String.fromCharCode(i);
+        const btn = document.createElement('button');
+        btn.textContent = letter;
+        btn.className = 'letter-btn';
+        btn.disabled = correctGuesses.includes(letter) || incorrectGuesses.includes(letter) || gameOver;
+        btn.onclick = () => handleGuess(letter);
+        letterButtons.appendChild(btn);
+      }
+    }
+
+    function displayIncorrectGuesses() {
+      incorrectLetters.innerHTML = '';
+      for (let letter of incorrectGuesses) {
+        const box = document.createElement('span');
+        box.className = 'incorrect-box';
+        box.textContent = letter;
+        incorrectLetters.appendChild(box);
+      }
+    }
+
+    function updateGuessesLeft() {
+      guessesLeftDiv.textContent = `Guesses left: ${guessesLeft}`;
+    }
+
+    function handleGuess(letter) {
+      if (gameOver) return;
+      if (chosenWord.includes(letter)) {
+        correctGuesses.push(letter);
+      } else {
+        if (!incorrectGuesses.includes(letter)) {
+          incorrectGuesses.push(letter);
+          guessesLeft--;
+        }
+      }
+      checkGameStatus();
+      displayWord();
+      createLetterButtons();
+      displayIncorrectGuesses();
+      updateGuessesLeft();
+    }
+
+    function checkGameStatus() {
+      let won = true;
+      for (let letter of chosenWord) {
+        if (!correctGuesses.includes(letter)) {
+          won = false;
+          break;
+        }
+      }
+      if (won) {
+        gameMessage.textContent = '🎉 You Win! The word was: ' + chosenWord;
+        gameOver = true;
+        restartBtn.style.display = 'inline-block';
+      } else if (guessesLeft <= 0) {
+        gameMessage.textContent = '😢 Game Over! The word was: ' + chosenWord;
+        gameOver = true;
+        restartBtn.style.display = 'inline-block';
+      } else {
+        gameMessage.textContent = '';
+      }
+    }
+
+    function restartGame() {
+      chosenWord = pickWord();
+      correctGuesses = [];
+      incorrectGuesses = [];
+      guessesLeft = 12;
+      gameOver = false;
+      restartBtn.style.display = 'none';
+      gameMessage.textContent = '';
+      displayWord();
+      createLetterButtons();
+      displayIncorrectGuesses();
+      updateGuessesLeft();
+    }
+
+    restartBtn.onclick = restartGame;
+
+    // Start game on load
+    restartGame();
+  </script>
 </body>
 </html> 
