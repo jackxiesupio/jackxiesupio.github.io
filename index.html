@@ -113,6 +113,24 @@
     .restart-btn:hover {
       background: #125ea2;
     }
+    .hangman-drawing {
+      width: 120px;
+      height: 180px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .hangman-part {
+      stroke: #333;
+      stroke-width: 4px;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .hangman-part.visible {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -121,6 +139,7 @@
     <div class="caption">Emi Martínez's Legendary Save</div>
   </div>
   <div class="hangman-container">
+    <div id="hangmanDrawing" class="hangman-drawing"></div>
     <div class="guesses-left" id="guessesLeft"></div>
     <div class="word" id="wordDisplay"></div>
     <div class="letters" id="letterButtons"></div>
@@ -130,6 +149,14 @@
   </div>
   <script type="module">
     import { WORDS } from './words.js';
+
+    const HANGMAN_PARTS = [
+      // Gallows (5 parts)
+      'base', 'pole', 'beam', 'rope', 'support',
+      // Body (7 parts)
+      'head', 'body', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg', 'face'
+    ];
+    const MAX_PARTS = 12; // 5 gallows + 7 body
 
     let chosenWord = '';
     let correctGuesses = [];
@@ -143,6 +170,36 @@
     const guessesLeftDiv = document.getElementById('guessesLeft');
     const gameMessage = document.getElementById('gameMessage');
     const restartBtn = document.getElementById('restartBtn');
+    const hangmanDrawing = document.getElementById('hangmanDrawing');
+
+    function renderHangman(incorrectCount) {
+      // SVG with 12 parts, each with class hangman-part and unique id
+      const svg = `
+        <svg width="120" height="180" viewBox="0 0 120 180">
+          <!-- Gallows -->
+          <line x1="10" y1="170" x2="110" y2="170" class="hangman-part${incorrectCount>0?' visible':''}" id="base" />
+          <line x1="30" y1="170" x2="30" y2="20" class="hangman-part${incorrectCount>1?' visible':''}" id="pole" />
+          <line x1="30" y1="20" x2="80" y2="20" class="hangman-part${incorrectCount>2?' visible':''}" id="beam" />
+          <line x1="80" y1="20" x2="80" y2="40" class="hangman-part${incorrectCount>3?' visible':''}" id="rope" />
+          <line x1="30" y1="50" x2="60" y2="20" class="hangman-part${incorrectCount>4?' visible':''}" id="support" />
+          <!-- Head -->
+          <circle cx="80" cy="55" r="15" class="hangman-part${incorrectCount>5?' visible':''}" id="head" />
+          <!-- Body -->
+          <line x1="80" y1="70" x2="80" y2="110" class="hangman-part${incorrectCount>6?' visible':''}" id="body" />
+          <!-- Left Arm -->
+          <line x1="80" y1="80" x2="60" y2="95" class="hangman-part${incorrectCount>7?' visible':''}" id="leftArm" />
+          <!-- Right Arm -->
+          <line x1="80" y1="80" x2="100" y2="95" class="hangman-part${incorrectCount>8?' visible':''}" id="rightArm" />
+          <!-- Left Leg -->
+          <line x1="80" y1="110" x2="65" y2="140" class="hangman-part${incorrectCount>9?' visible':''}" id="leftLeg" />
+          <!-- Right Leg -->
+          <line x1="80" y1="110" x2="95" y2="140" class="hangman-part${incorrectCount>10?' visible':''}" id="rightLeg" />
+          <!-- Face (sad mouth) -->
+          <path d="M73 62 Q80 70 87 62" class="hangman-part${incorrectCount>11?' visible':''}" id="face" />
+        </svg>
+      `;
+      hangmanDrawing.innerHTML = svg;
+    }
 
     function pickWord() {
       const idx = Math.floor(Math.random() * WORDS.length);
@@ -203,6 +260,7 @@
       createLetterButtons();
       displayIncorrectGuesses();
       updateGuessesLeft();
+      renderHangman(incorrectGuesses.length);
     }
 
     function checkGameStatus() {
@@ -238,6 +296,7 @@
       createLetterButtons();
       displayIncorrectGuesses();
       updateGuessesLeft();
+      renderHangman(0);
     }
 
     restartBtn.onclick = restartGame;
