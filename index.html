@@ -174,28 +174,46 @@
 
     function renderHangman(incorrectCount) {
       // SVG with 12 parts, each with class hangman-part and unique id
+      const showHead = incorrectCount > 5;
+      const showBody = incorrectCount > 6;
+      const showLeftArm = incorrectCount > 7;
+      const showRightArm = incorrectCount > 8;
+      const showLeftLeg = incorrectCount > 9;
+      const showRightLeg = incorrectCount > 10;
+      // Gallows
+      const showBase = incorrectCount > 0;
+      const showPole = incorrectCount > 1;
+      const showBeam = incorrectCount > 2;
+      const showRope = incorrectCount > 3;
+      const showSupport = incorrectCount > 4;
+      // Face (Eric image)
+      const ericImg = showHead ? `<image href='eric.png' x='65' y='40' width='30' height='30' clip-path='url(#ericClip)' class='hangman-face${showHead ? ' visible' : ''}' style='opacity:${showHead ? 1 : 0};transition:opacity 0.3s;' />` : '';
       const svg = `
         <svg width="120" height="180" viewBox="0 0 120 180">
+          <defs>
+            <clipPath id="ericClip">
+              <circle cx="80" cy="55" r="15" />
+            </clipPath>
+          </defs>
           <!-- Gallows -->
-          <line x1="10" y1="170" x2="110" y2="170" class="hangman-part${incorrectCount>0?' visible':''}" id="base" />
-          <line x1="30" y1="170" x2="30" y2="20" class="hangman-part${incorrectCount>1?' visible':''}" id="pole" />
-          <line x1="30" y1="20" x2="80" y2="20" class="hangman-part${incorrectCount>2?' visible':''}" id="beam" />
-          <line x1="80" y1="20" x2="80" y2="40" class="hangman-part${incorrectCount>3?' visible':''}" id="rope" />
-          <line x1="30" y1="50" x2="60" y2="20" class="hangman-part${incorrectCount>4?' visible':''}" id="support" />
-          <!-- Head -->
-          <circle cx="80" cy="55" r="15" class="hangman-part${incorrectCount>5?' visible':''}" id="head" />
+          <line x1="10" y1="170" x2="110" y2="170" class="hangman-part${showBase?' visible':''}" id="base" />
+          <line x1="30" y1="170" x2="30" y2="20" class="hangman-part${showPole?' visible':''}" id="pole" />
+          <line x1="30" y1="20" x2="80" y2="20" class="hangman-part${showBeam?' visible':''}" id="beam" />
+          <line x1="80" y1="20" x2="80" y2="40" class="hangman-part${showRope?' visible':''}" id="rope" />
+          <line x1="30" y1="50" x2="60" y2="20" class="hangman-part${showSupport?' visible':''}" id="support" />
+          <!-- Head outline -->
+          <circle cx="80" cy="55" r="15" class="hangman-part${showHead?' visible':''}" id="head" />
+          ${ericImg}
           <!-- Body -->
-          <line x1="80" y1="70" x2="80" y2="110" class="hangman-part${incorrectCount>6?' visible':''}" id="body" />
+          <line x1="80" y1="70" x2="80" y2="110" class="hangman-part${showBody?' visible':''}" id="body" />
           <!-- Left Arm -->
-          <line x1="80" y1="80" x2="60" y2="95" class="hangman-part${incorrectCount>7?' visible':''}" id="leftArm" />
+          <line x1="80" y1="80" x2="60" y2="95" class="hangman-part${showLeftArm?' visible':''}" id="leftArm" />
           <!-- Right Arm -->
-          <line x1="80" y1="80" x2="100" y2="95" class="hangman-part${incorrectCount>8?' visible':''}" id="rightArm" />
+          <line x1="80" y1="80" x2="100" y2="95" class="hangman-part${showRightArm?' visible':''}" id="rightArm" />
           <!-- Left Leg -->
-          <line x1="80" y1="110" x2="65" y2="140" class="hangman-part${incorrectCount>9?' visible':''}" id="leftLeg" />
+          <line x1="80" y1="110" x2="65" y2="140" class="hangman-part${showLeftLeg?' visible':''}" id="leftLeg" />
           <!-- Right Leg -->
-          <line x1="80" y1="110" x2="95" y2="140" class="hangman-part${incorrectCount>10?' visible':''}" id="rightLeg" />
-          <!-- Face (sad mouth) -->
-          <path d="M73 62 Q80 70 87 62" class="hangman-part${incorrectCount>11?' visible':''}" id="face" />
+          <line x1="80" y1="110" x2="95" y2="140" class="hangman-part${showRightLeg?' visible':''}" id="rightLeg" />
         </svg>
       `;
       hangmanDrawing.innerHTML = svg;
