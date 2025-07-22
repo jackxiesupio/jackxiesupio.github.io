@@ -32,6 +32,74 @@
       font-size: 1rem;
       color: #333;
     }
+    .word-selection {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      padding: 24px;
+      margin-top: 16px;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .word-toggle {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .toggle-btn {
+      padding: 8px 16px;
+      border: 2px solid #1976d2;
+      background: #fff;
+      color: #1976d2;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .toggle-btn.active {
+      background: #1976d2;
+      color: #fff;
+    }
+    .custom-word-input {
+      display: none;
+      width: 100%;
+      max-width: 200px;
+    }
+    .custom-word-input.show {
+      display: block;
+    }
+    .custom-word-input input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .custom-word-input input:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+    .start-game-btn {
+      padding: 10px 20px;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .start-game-btn:hover {
+      background: #45a049;
+    }
+    .start-game-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
     .hangman-container {
       background: #fff;
       border-radius: 12px;
@@ -138,14 +206,27 @@
     <img src="Emi-Martinez-save.jpg" alt="Emi Martínez Save">
     <div class="caption">Emi Martínez's Legendary Save</div>
   </div>
-  <div class="hangman-container">
+  
+  <div class="word-selection" id="wordSelection">
+    <h3>Choose Word Type</h3>
+    <div class="word-toggle">
+      <button class="toggle-btn active" id="randomBtn">Random Word</button>
+      <button class="toggle-btn" id="customBtn">Custom Word</button>
+    </div>
+    <div class="custom-word-input" id="customWordInput">
+      <input type="text" id="customWordField" placeholder="Enter your word..." maxlength="20">
+    </div>
+    <button class="start-game-btn" id="startGameBtn">Start Game</button>
+  </div>
+  
+  <div class="hangman-container" id="hangmanContainer" style="display:none;">
     <div id="hangmanDrawing" class="hangman-drawing"></div>
     <div class="guesses-left" id="guessesLeft"></div>
     <div class="word" id="wordDisplay"></div>
     <div class="letters" id="letterButtons"></div>
     <div class="incorrect-letters" id="incorrectLetters"></div>
     <div class="game-message" id="gameMessage"></div>
-    <button class="restart-btn" id="restartBtn" style="display:none;">Restart</button>
+    <button class="restart-btn" id="restartBtn" style="display:none;">New Game</button>
   </div>
   <script type="module">
     import { WORDS } from './words.js';
@@ -163,7 +244,16 @@
     let incorrectGuesses = [];
     let guessesLeft = 12;
     let gameOver = false;
+    let isRandomWord = true;
 
+    // UI Elements
+    const wordSelection = document.getElementById('wordSelection');
+    const hangmanContainer = document.getElementById('hangmanContainer');
+    const randomBtn = document.getElementById('randomBtn');
+    const customBtn = document.getElementById('customBtn');
+    const customWordInput = document.getElementById('customWordInput');
+    const customWordField = document.getElementById('customWordField');
+    const startGameBtn = document.getElementById('startGameBtn');
     const wordDisplay = document.getElementById('wordDisplay');
     const letterButtons = document.getElementById('letterButtons');
     const incorrectLetters = document.getElementById('incorrectLetters');
@@ -171,6 +261,44 @@
     const gameMessage = document.getElementById('gameMessage');
     const restartBtn = document.getElementById('restartBtn');
     const hangmanDrawing = document.getElementById('hangmanDrawing');
+
+    // Toggle between random and custom word
+    randomBtn.addEventListener('click', () => {
+      isRandomWord = true;
+      randomBtn.classList.add('active');
+      customBtn.classList.remove('active');
+      customWordInput.classList.remove('show');
+      startGameBtn.disabled = false;
+    });
+
+    customBtn.addEventListener('click', () => {
+      isRandomWord = false;
+      customBtn.classList.add('active');
+      randomBtn.classList.remove('active');
+      customWordInput.classList.add('show');
+      customWordField.focus();
+    });
+
+    // Handle custom word input
+    customWordField.addEventListener('input', () => {
+      const word = customWordField.value.trim();
+      startGameBtn.disabled = word.length < 2;
+    });
+
+    // Start game button
+    startGameBtn.addEventListener('click', () => {
+      if (isRandomWord) {
+        chosenWord = pickWord();
+      } else {
+        const customWord = customWordField.value.trim().toUpperCase();
+        if (customWord.length < 2) return;
+        chosenWord = customWord;
+      }
+      
+      wordSelection.style.display = 'none';
+      hangmanContainer.style.display = 'flex';
+      startGame();
+    });
 
     function renderHangman(incorrectCount) {
       // SVG with 12 parts, each with class hangman-part and unique id
@@ -301,8 +429,7 @@
       }
     }
 
-    function restartGame() {
-      chosenWord = pickWord();
+    function startGame() {
       correctGuesses = [];
       incorrectGuesses = [];
       guessesLeft = 12;
@@ -316,10 +443,14 @@
       renderHangman(0);
     }
 
-    restartBtn.onclick = restartGame;
+    function restartGame() {
+      wordSelection.style.display = 'block';
+      hangmanContainer.style.display = 'none';
+      customWordField.value = '';
+      startGameBtn.disabled = false;
+    }
 
-    // Start game on load
-    restartGame();
+    restartBtn.onclick = restartGame;
   </script>
 </body>
 </html> 
